@@ -1,5 +1,5 @@
 ﻿#include<stdio.h>
-#include<malloc.h>
+#include<stdlib.h>
 //#define NULL 0
 #define O1 sizeof(struct job)
 #define O2 sizeof(struct rest)
@@ -32,14 +32,15 @@ struct job* CreateJob(void)
 {
 	struct job* p;
 	p = (struct job*)malloc(O1);
+	if(!p) exit(1);
 	printf("Enter name(int): ");
 	if (fgets(buffer, sizeof(buffer), stdin))
 	{
-		sscanf_s(buffer, "%d", &p->name, (unsigned int)sizeof(p->name));
+		sscanf_s(buffer, "%d", &p->name);
 		printf("Enter size: ");
 		if (fgets(buffer, sizeof(buffer), stdin))
 		{
-			sscanf_s(buffer, "%d", &p->size, (unsigned int)sizeof(p->size));
+			sscanf_s(buffer, "%d", &p->size);
 			return (p);
 		}
 	}
@@ -54,6 +55,7 @@ struct rest* InitRestLinkList(void)
 	struct rest* head;
 	struct rest* p1;
 	p1 = (struct rest*)malloc(O2);
+	if(!p1) exit(1);
 	p1->size = SUM;
 	p1->ad = FirstAddress;
 	p1->next = NULL;
@@ -71,44 +73,57 @@ struct use* InitUseLinkList(void)
 	return(head);
 }
 
-struct rest* FFAllocate(struct rest* resthead, struct job* pjob)//首次适应算法 
+/*
+First Fit Allocation Algorithm  
+@param resthead: the head node of rest linklist
+@param pjob: the job to allocate
+@return: the updated rest linklist
+*/
+struct rest* FFAllocate(struct rest* resthead, struct job* pjob, int* workAd)//首次适应算法
 {
 	struct rest* cur, * pre;
-	struct job* a;
 	cur = resthead;
+	pre = NULL;
 	if(!resthead) return NULL;
-	while (cur->size < pjob->size && cur->next != NULL)
+	while (cur->size < pjob->size && cur->next != NULL) 
 	{
 		pre = cur;
 		cur = cur->next;
 	}
-	if (cur->size >= pjob->size)
+	// found a rest block which is large enough to allocate
+	if (cur->size >= pjob->size) 
 	{
 		int marginSize = cur->size - pjob->size;
-		if (marginSize > 0)
+		*workAd = cur->ad;
+		// split the rest block into two parts
+		if (marginSize > 0) 
 		{
-			struct rest* restNew = (struct rest*)malloc(O2);
-			restNew->size = marginSize;
-			restNew->ad = cur->ad + pjob->size;
-			restNew->next = cur->next;
-			cur->size -= pjob->size;
-			cur->next = restNew;
+			cur->ad += pjob->size;
+			cur->size = marginSize;
+			return resthead;
 		}
 		else
 		{
+			if (!pre)
+			{
+				free(cur);
+				return NULL;
+			}
 			pre->next = cur->next;
 			free(cur);
+			return resthead;
 		}
 	}
-
-		
-
-	return(resthead);
+	else
+	{
+		*workAd = 0;
+		return NULL;
+	}
 }
 
 struct rest* BFAllocate(struct rest* head, struct job* p)//最佳适应算法 
 {
-	struct rest* p0, * p1;
+	struct rest* p0;
 	struct job* a;
 	a = p;
 	p0 = head;
@@ -119,7 +134,7 @@ struct rest* BFAllocate(struct rest* head, struct job* p)//最佳适应算法
 
 struct rest* WFAllocate(struct rest* head, struct job* p)//最坏适应算法 
 {
-	struct rest* p0, * p1;
+	struct rest* p0;
 	struct job* a;
 	a = p;
 	p0 = head;
@@ -133,9 +148,9 @@ Link pjob to the last one in use linklist
 */
 struct use* UpdateUse(struct use* usehead, struct job* pjob)
 {
-	struct use* p0, * pjobNew, * p2;
-	struct job* pjob;
+	struct use* p0, * p2;
 	p0 = (struct use*)malloc(O3);
+	if (!p0) exit(1);
 	if (usehead == NULL)
 	{
 		p0->name = pjob->name;
@@ -155,7 +170,7 @@ struct use* UpdateUse(struct use* usehead, struct job* pjob)
 			p2 = p2->next;
 		}
 		p2->next = p0;
-		cur->next = NULL;
+		p0->next = NULL;
 	}
 	return(usehead);
 }
@@ -169,6 +184,7 @@ struct use* DeleteJob(struct use* usehead, struct job* p)
 	struct use* cur, * pre;
 	cur = usehead;
 	pjob = p;
+	pre = NULL;
 	while ((pjob->name != cur->name) && (cur->next != NULL))
 	{
 		pre = cur;
@@ -190,12 +206,13 @@ struct job* GetJob(struct use* usehead)
 {
 	struct job* p1;
 	struct use* p2;
-	int num;
+	int num = 0;
 	p1 = (struct job*)malloc(O1);
+	if(!p1) exit(1);
 	printf("Enter job name you want to remove: ");
 	if (fgets(buffer, sizeof(buffer), stdin))
 	{
-		sscanf_s(buffer, "%d", &num, (unsigned int)sizeof(num));
+		sscanf_s(buffer, "%d", &num);
 	}
 	p2 = usehead;
 	while ((num != p2->name) && (p2->next != NULL))
@@ -210,7 +227,6 @@ struct job* GetJob(struct use* usehead)
 	}
 	else
 	{
-		printf("No such job in use linklist!\n");
 		free(p1);
 		return NULL;
 	}
@@ -226,7 +242,9 @@ struct rest* UpdateRest(struct job* p, struct rest* resthead)
 	struct job* pjob;
 	pjob = p;
 	cur = resthead;
+	pre = NULL;
 	pjobNew = (struct rest*)malloc(O2);
+	if (!pjobNew) exit(1);
 	pjobNew->size = pjob->size;
 	pjobNew->ad = pjob->ad;
 	if (!resthead)
@@ -320,25 +338,25 @@ void structPrint(struct rest* h1, struct use* h2)
 	n1 = h2;
 	if (m1 == NULL)
 	{
-		printf("空闲表为空!\n");
+		printf("Rest LinkList is empty!\n");
 	}
 	else
 	{
 		while (m1 != NULL)
 		{
-			printf("空闲单元地址为%d,其大小为%d\n", m1->ad, m1->size);
+			printf("Rest Block Address is %d, its size is %d\n", m1->ad, m1->size);
 			m1 = m1->next;
 		}
 	}
 	if (n1 == NULL)
 	{
-		printf("已分配表为空!\n");
+		printf("Use LinkList is empty!\n");
 	}
 	else
 	{
 		while (n1 != NULL)
 		{
-			printf("已分配单元地址为%d,其大小为%d,其名称为%d\n", n1->ad, n1->size, n1->name);
+			printf("Use Block Address is %d, its size is %d, its name is %d\n", n1->ad, n1->size, n1->name);
 			n1 = n1->next;
 		}
 	}
@@ -349,28 +367,35 @@ void FF(void)
 {
 	struct rest* prest;
 	struct use* puse;
-	struct job* pjob, * q;
+	struct job* pjob, * pjob2;
+	int* workAd = (int*)malloc(sizeof(int));
+	if(!workAd)exit(1);
 	int y = 1;
 	int n = 0;
 	int a = 1;
-	int c;
+	int c = 3;
 	prest = InitRestLinkList();
 	puse = InitUseLinkList();
-	printf("初始情况为:\n");
+	printf("Initial situation:\n");
 	structPrint(prest, puse);
 	while (a == y)
 	{
 		printf("Enter operation id 1-init job; 2-remove job; 3-end : ");
 		if (fgets(buffer, sizeof(buffer), stdin))
 		{
-			sscanf_s(buffer, "%d", &c, (unsigned int)sizeof(c));
+			sscanf_s(buffer, "%d", &c);
 		}
 		switch (c)
 		{
 		case 1:
 			pjob = CreateJob();
-			prest = FFAllocate(prest, pjob);
 			if (!pjob)
+			{
+				printf("Create job failed!\n");
+				break;
+			}
+			prest = FFAllocate(prest, pjob,workAd);
+			if (!(*workAd))
 			{
 				printf("Allocate failed, no rest space available!\n");
 				break;
@@ -378,13 +403,18 @@ void FF(void)
 			puse = UpdateUse(puse, pjob);
 			structPrint(prest, puse); break;
 		case 2:
-			q = GetJob(puse);
-			if (!q) break;
-			puse = DeleteJob(puse, q);
-			prest = UpdateRest(q, prest);
+			pjob2 = GetJob(puse);
+			if (!pjob2)
+			{
+				printf("Get job failed!\n");
+				break;
+			}
+			puse = DeleteJob(puse, pjob2);
+			prest = UpdateRest(pjob2, prest);
 			structPrint(prest, puse); break;
 		case 3:
 			y = 0; break;
+			free(workAd);
 		}
 	}
 }
@@ -397,17 +427,17 @@ void BF(void)
 	int y = 1;
 	int n = 0;
 	int a = 1;
-	int c;
+	int c = 3;
 	p1 = InitRestLinkList();
 	p2 = InitUseLinkList();
-	printf("初始情况为:\n");
+	printf("Initial situation:\n");
 	structPrint(p1, p2);
 	while (a == y)
 	{
 		printf("Enter operation id 1-init job; 2-remove job; 3-end : ");
 		if (fgets(buffer, sizeof(buffer), stdin))
 		{
-			sscanf_s(buffer, "%d", &c, (unsigned int)sizeof(c));
+			sscanf_s(buffer, "%d", &c);
 		}
 		switch (c)
 		{
@@ -427,50 +457,51 @@ void BF(void)
 	}
 }
 
-void WF(void)
-{
-	struct rest* p1;
-	struct use* p2;
-	struct job* p, * q;
-	int y = 1;
-	int n = 0;
-	int a = 1;
-	int c;
-	p1 = InitRestLinkList();
-	p2 = InitUseLinkList();
-	printf("初始情况为:\n");
-	structPrint(p1, p2);
-	while (a == y)
-	{
-		printf("Enter operation id 1-init job; 2-remove job; 3-end : ");
-		if (fgets(buffer, sizeof(buffer), stdin))
-		{
-			sscanf_s(buffer, "%d", &c, (unsigned int)sizeof(c));
-		}
-		switch (c)
-		{
-		case 1:
-			p = CreateJob();
-			p1 = WFAllocate(p1, p);
-			p2 = UpdateUse(p2, p);
-			structPrint(p1, p2); break;
-		case 2:
-			q = GetJob(p2);
-			p2 = DeleteJob(p2, q);
-			p1 = UpdateRest(q, p1);
-			structPrint(p1, p2); break;
-		case 3:
-			y = 0; break;
-		}
-	}
-}
+//void WF(void)
+//{
+//	struct rest* p1;
+//	struct use* p2;
+//	struct job* p, * q;
+//	int y = 1;
+//	int n = 0;
+//	int a = 1;
+//	int c = 3;
+//	p1 = InitRestLinkList();
+//	p2 = InitUseLinkList();
+//	printf("Initial situation:\n");
+//	structPrint(p1, p2);
+//	while (a == y)
+//	{
+//		printf("Enter operation id 1-init job; 2-remove job; 3-end : ");
+//		if (fgets(buffer, sizeof(buffer), stdin))
+//		{
+//			sscanf_s(buffer, "%d", &c);
+//		}
+//		switch (c)
+//		{
+//		case 1:
+//			p = CreateJob();
+//			p1 = WFAllocate(p1, p);
+//			p2 = UpdateUse(p2, p);
+//			structPrint(p1, p2); break;
+//		case 2:
+//			q = GetJob(p2);
+//			p2 = DeleteJob(p2, q);
+//			p1 = UpdateRest(q, p1);
+//			structPrint(p1, p2); break;
+//		case 3:
+//			y = 0; break;
+//		}
+//	}
+//}
 
 int main()
 {
-	printf("先进先出算法的实现\n");
+	printf("First Fit Allocation Algorithm \n");
 	FF();
-	printf("最佳适应算法 \n");
-	BF();
-	printf("最坏适应算法 \n");
-	WF();
+	//printf("最佳适应算法 \n");
+	//BF();
+	//printf("最坏适应算法 \n");
+	//WF();
 	return 0;
+}
