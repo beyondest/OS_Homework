@@ -23,7 +23,7 @@ struct job* GenerateRandomJob(void)
     if (!p) exit(1);
 
     p->name = rand() % 1000; // Random name between 0 and 999
-    p->size = (rand() % 100) + 1; // Random size between 1 and 100
+    p->size = (rand() % 30) + 1; // Random size between 1 and 100
     p->ad = 0;
     return p;
 }
@@ -200,12 +200,13 @@ void Run(int algorithm)
             if (!pjob->ad)
             {
                 printf("Allocate failed, no rest space available!\n");
-                break;
             }
-            puse = AddJob2UseLlist(puse, pjob);
-            structPrint(prest, puse);
+            else
+            {
+				puse = AddJob2UseLlist(puse, pjob);
+				structPrint(prest, puse);
+            }
             free(pjob);
-
             break;
 
         case 2:
@@ -267,11 +268,12 @@ void RunRandom(int algorithm, int iterations)
             if (!pjob->ad)
             {
                 printf("Allocate failed, no rest space available!\n");
-                break;
             }
-
-            puse = AddJob2UseLlist(puse, pjob);
-            structPrint(prest, puse);
+            else
+            {
+				puse = AddJob2UseLlist(puse, pjob);
+				structPrint(prest, puse);
+            }
             free(pjob);
             break;
 
@@ -330,10 +332,12 @@ void RunRandomWithInput(int algorithm, int iterations)
             if (!pjob->ad)
             {
                 printf("Allocate failed, no rest space available!\n");
-                break;
             }
-            puse = AddJob2UseLlist(puse, pjob);
-            structPrint(prest, puse);
+            else
+            {
+				puse = AddJob2UseLlist(puse, pjob);
+				structPrint(prest, puse);
+            }
             free(pjob);
             break;
         case 2:
@@ -346,7 +350,7 @@ void RunRandomWithInput(int algorithm, int iterations)
             puse = DelJobFromUseLlist(puse, pjob2);
             prest = RecycleRestLlist(pjob2, prest);
             structPrint(prest, puse);
-            free(pjob);
+            free(pjob2);
             break;
         case 3:
             printf("Ending simulation\n");
@@ -359,6 +363,7 @@ void RunRandomWithInput(int algorithm, int iterations)
     }
     FreeRestLinkList(prest);
     FreeUseLinkList(puse);
+
 }
 
 
