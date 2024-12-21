@@ -21,8 +21,8 @@
   <PropertyGroup Label="Globals">
     <VCProjectVersion>17.0</VCProjectVersion>
     <Keyword>Win32Proj</Keyword>
-    <ProjectGuid>{720fe799-374a-4cfa-8cdf-241d199d3b74}</ProjectGuid>
-    <RootNamespace>MemoryAllocation</RootNamespace>
+    <ProjectGuid>{0f842ce6-83b9-4425-853e-d45ba1cc6af1}</ProjectGuid>
+    <RootNamespace>TestCpp</RootNamespace>
     <WindowsTargetPlatformVersion>10.0</WindowsTargetPlatformVersion>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
@@ -127,14 +127,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="Algorithm.c" />
-    <ClCompile Include="LinkList.c" />
-    <ClCompile Include="main.c" />
-  </ItemGroup>
-  <ItemGroup>
-    <ClInclude Include="Algorithm.h" />
-    <ClInclude Include="LinkList.h" />
-    <ClInclude Include="main.h" />
+    <ClCompile Include="t.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

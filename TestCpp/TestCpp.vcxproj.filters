@@ -15,7 +15,7 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="CPUSchedule\CPUSchedule.c">
+    <ClCompile Include="t.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
